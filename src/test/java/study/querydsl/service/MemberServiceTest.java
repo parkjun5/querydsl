@@ -30,6 +30,7 @@ class MemberServiceTest {
     @BeforeEach
     void setEntity() {
         Team team = new Team("TeamA");
+        em.persist(team);
         Member member = Member.createMember("member1", 15, team);
 
         memberRepository.save(member);
@@ -40,6 +41,7 @@ class MemberServiceTest {
     void join() throws Exception {
         //given
         Team team = new Team("TeamB");
+        em.persist(team);
         Member member = Member.createMember("member2", 25, team);
 
         memberRepository.save(member);
@@ -59,6 +61,7 @@ class MemberServiceTest {
     void findAll() {
         for (int index = 0; index < 5; index++) {
             Team team = new Team("Team_" + index);
+            em.persist(team);
             Member member = Member.createMember("member_" + index, 25 + index, team);
             memberRepository.save(member);
         }
@@ -71,8 +74,8 @@ class MemberServiceTest {
         Page<Member> memberPage = memberRepository.findAll(pageRequest);
 
         //then
-        assertThat(memberPage.getTotalElements()).isEqualTo(10);
-        assertThat(memberPage.getTotalPages()).isEqualTo(4);
+        assertThat(memberPage.getTotalElements()).isEqualTo(6);
+        assertThat(memberPage.getTotalPages()).isEqualTo(3);
         assertThat(memberPage.isFirst()).isTrue();
     }
 }
