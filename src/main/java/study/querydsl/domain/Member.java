@@ -19,6 +19,9 @@ public class Member extends BaseEntity {
     private String username;
     private int age;
 
+    @Enumerated(EnumType.STRING)
+    private MemberRole memberRole;
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "team_id")
     @ToString.Exclude
@@ -32,6 +35,11 @@ public class Member extends BaseEntity {
     public Member(String username, int age) {
         this.username = username;
         this.age = age;
+    }
+
+    public Member(String username, MemberRole memberRole) {
+        this.username = username;
+        this.memberRole = memberRole;
     }
 
     public static Member createMember(String username, int age, Team team) {
