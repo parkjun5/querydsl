@@ -1,7 +1,8 @@
 package study.querydsl;
 
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,21 +10,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.domain.Member;
-import study.querydsl.domain.QMember;
 import study.querydsl.domain.Team;
 import study.querydsl.repository.MemberRepository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
-import static study.querydsl.domain.QMember.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static study.querydsl.domain.QMember.member;
+import static study.querydsl.domain.QTeam.team;
 
 @SpringBootTest
 @Transactional
-public class QuerydslBasicTest {
+class QuerydslBasicTest {
 
     @PersistenceContext EntityManager em;
 
@@ -51,7 +51,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    void startJPQL() throws Exception {
+    void startJPQL() {
         //given
         String memberName = "member1";
         String qlString = "select m from Member m" +
@@ -66,7 +66,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    void startQuerydsl() throws Exception {
+    void startQuerydsl() {
         //given
         // QMember qMember = new QMember("member"); 같은 테이블 조인의 경우 사용
         //when
@@ -83,7 +83,7 @@ public class QuerydslBasicTest {
 
     @Test
     @DisplayName("검색조건: Equals / Not Equals")
-    void search1() throws Exception {
+    void search1() {
         //given
         Member findMember = queryFactory.selectFrom(member)
                 .where(member.username.eq("member1")
@@ -96,7 +96,7 @@ public class QuerydslBasicTest {
 
     @Test
     @DisplayName("검색조건: Between")
-    void search2() throws Exception {
+    void search2() {
         //given
         Member findMember = queryFactory.selectFrom(member)
                 .where(member.age.between(15, 50))
@@ -107,7 +107,7 @@ public class QuerydslBasicTest {
 
     @Test
     @DisplayName("검색조건: Not null")
-    void search3() throws Exception {
+    void search3() {
         //given
         Member findMember = queryFactory.selectFrom(member)
                 .where(member.username.isNotNull())
@@ -118,7 +118,7 @@ public class QuerydslBasicTest {
 
     @Test
     @DisplayName("검색조건: In Not In")
-    void search4() throws Exception {
+    void search4() {
         //given
         Member findMember = queryFactory.selectFrom(member)
                 .where(member.username.in("mem", "mem1", "member1")
@@ -130,7 +130,7 @@ public class QuerydslBasicTest {
 
     @Test
     @DisplayName("검색조건: geo gt loe lt 비교")
-    void search6() throws Exception {
+    void search6() {
         //given
         Member findMember = queryFactory.selectFrom(member)
                 .where(member.age.goe(21))
@@ -141,7 +141,7 @@ public class QuerydslBasicTest {
 
     @Test
     @DisplayName("검색조건: Like, Contains, StartWith ")
-    void search7() throws Exception {
+    void search7() {
         //given
         Member findMember1 = queryFactory.selectFrom(member)
                 .where(member.username.like("member%")) // like member%
@@ -160,21 +160,39 @@ public class QuerydslBasicTest {
         assertThat(findMember3).isNotNull();
     }
     @Test
-    @DisplayName("And 사용 안하기 null은 무시가 된다. ")
-    void searchAndParam() throws Exception {
+    @DisplayName("And 사용 안하기 null 값은 무시가 된다. ")
+    void searchAndParam() {
         //given
         Member findMember = queryFactory.selectFrom(member)
                 .where(
+                        member.id.eq(1L),
+                        member.age.ne(15), null
+                )
+                .fetchOne();
+        assert findMember != null;
+
+        Member findMember2 = queryFactory.selectFrom(member)
+                .where(
                         member.username.eq("member1"),
-                        (member.age.ne(15)), null
+                        ageIsNot15(findMember), null
                 )
                 .fetchOne();
 
+
         assertThat(findMember).isNotNull();
+        assertThat(findMember2).isNotNull();
+
+    }
+
+    private static BooleanExpression ageIsNot15(Member findMember) {
+        if (findMember.getAge() == 0) {
+            return  null;
+        }
+        return member.age.ne(15);
     }
 
     @Test
-    void resultFetch() throws Exception {
+    void resultFetch() {
         //given
         List<Member> members = queryFactory
                 .selectFrom(member)
@@ -182,17 +200,17 @@ public class QuerydslBasicTest {
         //when
 
         //then
-        assertThat(members.size()).isEqualTo(4);
+        assertThat(members).hasSize(4);
     }
 
     /**
      *  회원 정렬 순서
      *  1. 회원 나이 내림차순
      *  2. 이름 올림차순
-     *   단 이름이 없으면 마지막에 출력 null이면 last
+     *   단 이름이 없으면 마지막에 출력 null 이면 last
      */
     @Test
-    void sort() throws Exception {
+    void sort() {
         //given
         memberRepository.save(Member.createMember(null, 100, null));
         memberRepository.save(Member.createMember("member5", 100, null));
@@ -208,11 +226,11 @@ public class QuerydslBasicTest {
             System.out.println("member = " + member);
         }
 
-        assertThat(members.size()).isEqualTo(3);
+        assertThat(members).hasSize(3);
     }
     
     @Test
-    void paging1() throws Exception {
+    void paging1() {
         //given
         List<Member> members = queryFactory
                 .selectFrom(member)
@@ -224,8 +242,101 @@ public class QuerydslBasicTest {
         //when
 
         //then
-        assertThat(members.size()).isEqualTo(2);
+        assertThat(members).hasSize(2);
         assertThat(members.get(0).getUsername()).isEqualTo("member3");
+    }
+    
+    @Test
+    void aggregation() {
+        //given
+        List<Tuple> fetch = queryFactory
+                .select(
+                        member.count(),
+                        member.age.avg(),
+                        member.age.sum(),
+                        member.age.max(),
+                        member.age.min()
+                ).from(member)
+                .fetch();
+        //when 
+        Tuple tuple = fetch.get(0);
+
+        //then
+        assertThat(tuple.get(member.count())).isEqualTo(4);
+        assertThat(tuple.get(member.age.avg())).isEqualTo(25);
+        assertThat(tuple.get(member.age.sum())).isEqualTo(100);
+        assertThat(tuple.get(member.age.max())).isEqualTo(40);
+        assertThat(tuple.get(member.age.min())).isEqualTo(10);
+    }
+
+    @Test
+    void group() {
+        //given
+        List<Tuple> fetch = queryFactory
+                .select(team.name, member.age.avg())
+                .from(member)
+                .join(member.team, team)
+                .groupBy(team.name)
+                .having(team.name.eq("TeamA"))
+                .fetch();
+        //when
+        Tuple tuple = fetch.get(0);
+
+        //then
+        assertThat(tuple.get(team.name)).isEqualTo("TeamA");
+        assertThat(tuple.get(member.age.avg())).isEqualTo(15);
+        assertThat(tuple.get(member.count())).isNull();
+    }
+
+    @Test
+    void join() throws Exception {
+        //given
+        List<Member> members = queryFactory.selectFrom(member)
+                .join(member.team, team)
+                .where(team.name.eq("TeamA"))
+                .fetch();
+
+        //then
+        assertThat(members)
+                .extracting("username")
+                .containsExactly("member1", "member2");
+    }
+
+    @Test
+    void leftJoin() throws Exception {
+        //given
+        List<Member> sameAsWhereResult = queryFactory.selectFrom(member)
+                .join(member.team, team).on(team.name.eq("TeamA"))
+                .fetch();
+
+        List<Member> fullMembers = queryFactory.selectFrom(member)
+                .leftJoin(member.team, team).on(team.name.eq("TeamA"))
+                .fetch();
+
+        //then
+        System.out.println("sameAsWhereResult = " + sameAsWhereResult);
+        assertThat(sameAsWhereResult)
+                .extracting("username")
+                .containsExactly("member1", "member2");
+        System.out.println("fullMembers = " + fullMembers);
+        assertThat(fullMembers)
+                .extracting("username")
+                .containsExactly("member1", "member2", "member3", "member4");
+    }
+
+    @Test
+    void thetaJoin() throws Exception {
+        //given
+        memberRepository.save(Member.createMember("TeamA", 15, null));
+        memberRepository.save(Member.createMember("TeamB", 35, null));
+
+        //when
+        queryFactory
+                .select(member)
+                .from(member, team)
+                .where(team.name.eq(member.username))
+                .fetch();
+        //then
     }
 
 }
