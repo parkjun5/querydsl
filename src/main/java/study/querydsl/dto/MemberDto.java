@@ -1,24 +1,25 @@
 package study.querydsl.dto;
 
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.Data;
-import study.querydsl.domain.Member;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class MemberDto {
 
-    private Long id;
     private String username;
-    private String teamName;
+    private int age;
 
-    public MemberDto(Long id, String username, String teamName) {
-        this.id = id;
+    public MemberDto(int age) {
+        this.username = "EMPTY";
+        this.age = age;
+    }
+
+    @QueryProjection
+    public MemberDto(String username, int age) {
         this.username = username;
-        this.teamName = teamName;
+        this.age = age;
     }
 
-    public MemberDto(Member member) {
-        id = member.getId();
-        username = getUsername();
-        teamName = null;
-    }
 }

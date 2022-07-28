@@ -1,0 +1,16 @@
+ctrl + E = 이전 파일
+ctrl + P = 생성자에 필요한 파라메터 보기
+
+ctrl + alt + p = 파라메터로 빼기
+ctrl + alt + m = 메소드 분리
+ctrl + alt + v = 파라메터 자동 완성
+
+
+ctrl + shift + u = 대문자로 변화
+ctrl + shift + enter = 코드 자동완성 + 세미콜론
+ctrl + shift + t = 테스트 코드 생성
+
+ctrl + shift + f10 =  코드 실행
+
+< devtools 라이브러리 필요 >
+ctrl + shift + F9 = 현재 파일만 다시 컴파일
