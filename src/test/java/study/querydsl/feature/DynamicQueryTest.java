@@ -1,4 +1,4 @@
-package study.querydsl.service.querydsl;
+package study.querydsl.feature;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
