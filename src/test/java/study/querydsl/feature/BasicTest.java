@@ -145,4 +145,30 @@ class BasicTest {
         //then
         assertThat(findMember).isEqualTo("member1");
     }
+    
+    @Test
+    void bulkUpdate() {
+        //when
+        em.flush();
+        em.clear();
+
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.loe(20))
+                .execute();
+
+        List<Member> members = queryFactory.selectFrom(member)
+                .fetch();
+
+        //then
+        assertThat(count).isEqualTo(2);
+
+        for (Member mem : members) {
+            if (mem.getAge() <= 20)
+                assertThat(mem)
+                    .extracting("username")
+                    .isEqualTo("비회원");
+        }
+    }
 }
