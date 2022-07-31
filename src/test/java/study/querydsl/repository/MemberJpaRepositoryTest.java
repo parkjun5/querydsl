@@ -9,6 +9,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.domain.Member;
+import study.querydsl.domain.Team;
+import study.querydsl.dto.MemberSearchCond;
+import study.querydsl.dto.MemberTeamDto;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -121,6 +124,70 @@ class MemberJpaRepositoryTest {
         assertThat(byUsernameQuery.get(0).getUsername()).isEqualTo("tester");
     }
 
+    @Test
+    void searchByBooleanBuilderTest() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+        Team TeamB = new Team("teamB");
+        em.persist(TeamB);
+
+        Member member1 = Member.createMember("member1", 10, teamA);
+        Member member2 = Member.createMember("member2", 20, teamA);
+
+        Member member3 = Member.createMember("member3", 30, TeamB);
+        Member member4 = Member.createMember("member4", 40, TeamB);
+        memberJpaRepository.save(member1);
+        memberJpaRepository.save(member2);
+        memberJpaRepository.save(member3);
+        memberJpaRepository.save(member4);
+        영속성컨텐츠초기화();
+
+        //when
+        MemberSearchCond memberSearchCond = new MemberSearchCond();
+        memberSearchCond.setAgeGoe(15);
+        memberSearchCond.setTeamName("teamB");
+        memberSearchCond.setAgeLoe(40);
+        List<MemberTeamDto> memberTeamDtos = memberJpaRepository.searchByBuilder(memberSearchCond);
+
+        //then
+        assertThat(memberTeamDtos).hasSize(2);
+        assertThat(memberTeamDtos)
+                .extracting("username")
+                .containsExactly("member3", "member4");
+
+    }
+
+    @Test
+    void searchByWhereTest() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+        Team TeamB = new Team("teamB");
+        em.persist(TeamB);
+
+        Member member1 = Member.createMember("member1", 10, teamA);
+        Member member2 = Member.createMember("member2", 20, teamA);
+
+        Member member3 = Member.createMember("member3", 30, TeamB);
+        Member member4 = Member.createMember("member4", 40, TeamB);
+        memberJpaRepository.save(member1);
+        memberJpaRepository.save(member2);
+        memberJpaRepository.save(member3);
+        memberJpaRepository.save(member4);
+        영속성컨텐츠초기화();
+
+        //when
+        MemberSearchCond memberSearchCond = new MemberSearchCond();
+        memberSearchCond.setAgeGoe(20);
+        memberSearchCond.setTeamName("teamA");
+        memberSearchCond.setAgeLoe(40);
+
+        List<MemberTeamDto> memberTeamDtoList = memberJpaRepository.searchByWhere(memberSearchCond);
+
+        //then
+        assertThat(memberTeamDtoList).hasSize(1);
+    }
 
     private void 영속성컨텐츠초기화() {
         em.flush();

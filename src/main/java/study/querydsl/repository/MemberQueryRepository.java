@@ -6,62 +6,22 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
-import study.querydsl.domain.Member;
- import study.querydsl.dto.MemberSearchCond;
+import study.querydsl.dto.MemberSearchCond;
 import study.querydsl.dto.MemberTeamDto;
 import study.querydsl.dto.QMemberTeamDto;
 
-import javax.persistence.EntityManager;
 import java.util.List;
-import java.util.Optional;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
-import static study.querydsl.domain.QMember.*;
-import static study.querydsl.domain.QTeam.*;
+import static study.querydsl.domain.QMember.member;
+import static study.querydsl.domain.QTeam.team;
 
 @Repository
 @RequiredArgsConstructor
-public class MemberJpaRepository {
+public class MemberQueryRepository {
 
     private final JPAQueryFactory queryFactory;
-    private final EntityManager em;
-
-    public Long save(Member member) {
-        em.persist(member);
-        return member.getId();
-    }
-
-    public Optional<Member> findById(Long id) {
-        Member findMember = em.find(Member.class, id);
-        return Optional.ofNullable(findMember);
-    }
-
-    public List<Member> findAll() {
-        return em.createQuery("select m from Member m", Member.class)
-                .getResultList();
-    }
-
-    public List<Member> findAllQuerydsl() {
-        return queryFactory.selectFrom(member)
-                .fetch();
-    }
-
-    public List<Member> findByUsername(String username) {
-        return em.createQuery("select m from Member m where m.username = :username", Member.class)
-                .setParameter("username", username)
-                .getResultList();
-    }
-
-    public List<Member> findByUsernameQuery(String username) {
-        return queryFactory
-                .select(member)
-                .from(member)
-                .where(member.username.eq(username))
-                .fetch();
-    }
-
     public List<MemberTeamDto> searchByBuilder(MemberSearchCond memberSearchCond) {
-
         BooleanBuilder booleanBuilder = new BooleanBuilder();
 
         if (StringUtils.hasText(memberSearchCond.getUsername())) {
@@ -81,11 +41,11 @@ public class MemberJpaRepository {
         }
 
         return queryFactory.select(new QMemberTeamDto(
-                                member.id.as("memberId"),
-                                member.username,
-                                member.age,
-                                team.id.as("teamId"),
-                                team.name.as("teamName")
+                        member.id.as("memberId"),
+                        member.username,
+                        member.age,
+                        team.id.as("teamId"),
+                        team.name.as("teamName")
                 ))
                 .from(member)
                 .leftJoin(member.team, team)
@@ -108,7 +68,7 @@ public class MemberJpaRepository {
                         teamNameEp(memberSearchCond.getTeamName()),
                         ageGoe(memberSearchCond.getAgeGoe()),
                         ageLoe(memberSearchCond.getAgeLoe())
-                        )
+                )
                 .fetch();
     }
 
