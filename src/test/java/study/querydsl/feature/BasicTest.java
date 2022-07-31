@@ -171,4 +171,112 @@ class BasicTest {
                     .isEqualTo("비회원");
         }
     }
+    
+    @Test
+    void bulkAdd() throws Exception {
+        //given
+        long effectedCount = queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1))
+                .execute();
+
+        //when
+        em.flush();
+        em.clear();
+        List<Member> members = queryFactory.selectFrom(member)
+                .fetch();
+
+        //then
+        assertThat(members.get(0).getAge()).isEqualTo(11);
+    }
+
+    @Test
+    void bulkMultiply() throws Exception {
+        //given
+        long effectedCount = queryFactory
+                .update(member)
+                .set(member.age, member.age.multiply(3))
+                .execute();
+
+        //when
+        em.flush();
+        em.clear();
+        List<Member> members = queryFactory.selectFrom(member)
+                .fetch();
+
+        //then
+        assertThat(members.get(0).getAge()).isEqualTo(30);
+    }
+
+    @Test
+    void bulkDelete() throws Exception {
+        //given
+        long effectedCount = queryFactory
+                .delete(member)
+                .execute();
+
+        //when
+        em.flush();
+        em.clear();
+        List<Member> members = queryFactory.selectFrom(member)
+                .fetch();
+
+        //then
+        assertThat(members).hasSize(0);
+    }
+
+    @Test
+    void sqlFunction() throws Exception {
+        //given
+        List<String> replacedUsername = queryFactory
+                .select(
+                        Expressions.stringTemplate("function('replace', {0}, {1}, {2})", member.username, "member", "M_"))
+                .from(member)
+                .fetch();
+        //when
+
+        //then
+        for (String s : replacedUsername) {
+            System.out.println("s = " + s);
+        }
+
+        assertThat(replacedUsername.get(0)).isEqualTo("M_1");
+    }
+
+    @Test
+    void sqlFunction2() throws Exception {
+        //given
+        List<String> replacedUsername = queryFactory
+                .select(member.username)
+                .from(member)
+                .where(member.username.eq(
+                        Expressions.stringTemplate("function('lower', {0})", member.username )
+                ))
+                .fetch();
+        //when
+
+        //then
+        for (String s : replacedUsername) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    void sqlFunction3() throws Exception {
+        //given
+        List<String> replacedUsername = queryFactory
+//                .select(
+//                        Expressions.stringTemplate("function('upper', {0})", member.username))
+                .select(member.username.upper())
+                .from(member)
+                .fetch();
+        //when
+
+        //then
+        for (String s : replacedUsername) {
+            System.out.println("s = " + s);
+        }
+
+    }
+
 }

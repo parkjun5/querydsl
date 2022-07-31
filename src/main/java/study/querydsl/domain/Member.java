@@ -4,6 +4,8 @@ import lombok.*;
 
 import javax.persistence.*;
 
+import java.util.Objects;
+
 import static javax.persistence.FetchType.LAZY;
 
 @Entity
@@ -55,5 +57,18 @@ public class Member extends BaseEntity {
     public void changeTeam(Team team) {
         this.team = team;
         team.getMembers().add(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Member member = (Member) o;
+        return age == member.age && Objects.equals(id, member.id) && Objects.equals(username, member.username) && memberRole == member.memberRole && Objects.equals(team, member.team);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username, age, memberRole, team);
     }
 }

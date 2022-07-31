@@ -165,12 +165,12 @@ class QuerydslBasicTest {
         //given
         Member findMember = queryFactory.selectFrom(member)
                 .where(
-                        member.id.eq(1L),
+                        member.age.eq(10),
                         member.age.ne(15), null
                 )
                 .fetchOne();
-        assert findMember != null;
 
+        assert findMember != null;
         Member findMember2 = queryFactory.selectFrom(member)
                 .where(
                         member.username.eq("member1"),
